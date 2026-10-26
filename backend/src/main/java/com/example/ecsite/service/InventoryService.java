@@ -42,4 +42,10 @@ public class InventoryService {
     public boolean reserve(long productId, int quantity) {
         return inventoryRepository.addReserved(productId, quantity) > 0;
     }
+
+    /** 画面で確認した購入可能数を使って引き当てる。 */
+    @Transactional
+    public boolean reserve(long productId, int quantity, int expectedAvailable) {
+        return inventoryRepository.addReservedUsingSnapshot(productId, quantity, expectedAvailable) > 0;
+    }
 }

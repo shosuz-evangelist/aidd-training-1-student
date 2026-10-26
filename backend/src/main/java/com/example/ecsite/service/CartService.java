@@ -103,7 +103,7 @@ public class CartService {
 
     /**
      * 送られた購入可能数で検査し、商品 ID の昇順で引き当て、カートの全商品の売上を記録し、カートを空にする。
-     * 送られた値は古い場合があるので、引当のときに在庫の側でも購入可能数を確かめる。
+     * 引当は加算式の更新で行い、同時購入でも引当済数の加算を失わない。
      * 失敗(CartException)したときは、全ての変更を戻す。
      */
     @Transactional
@@ -133,7 +133,8 @@ public class CartService {
             }
         }
         for (Line line : lines) {
-            if (!inventoryService.reserve(line.productId(), line.quantity())) {
+            if (!inventoryService.reserve(line.productId(), line.quantity(),
+                    sent.getOrDefault(line.productId(), 0))) {
                 throw new CartException(ErrorCode.INSUFFICIENT_STOCK);
             }
         }

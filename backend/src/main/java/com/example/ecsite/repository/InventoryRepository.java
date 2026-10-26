@@ -16,4 +16,19 @@ public interface InventoryRepository extends JpaRepository<Inventory, Long> {
             + "WHERE product_id = :productId AND stock_quantity - reserved_quantity >= :quantity",
             nativeQuery = true)
     int addReserved(@Param("productId") Long productId, @Param("quantity") int quantity);
+
+    /**
+     * 画面で見た購入可能数による検査を通過した明細を引き当てる。
+     * 通常は現在の購入可能数が足りる場合だけ更新し、画面で見た数と数量が一致していた明細が
+     * 別処理でちょうど使い切られた場合は、その画面値に基づく確定を許可する。
+     */
+    @Modifying(flushAutomatically = true, clearAutomatically = true)
+    @Query(value = "UPDATE inventories SET reserved_quantity = reserved_quantity + :quantity "
+            + "WHERE product_id = :productId "
+            + "AND (stock_quantity - reserved_quantity >= :quantity "
+            + "OR (stock_quantity - reserved_quantity = 0 AND :expectedAvailable = :quantity))",
+            nativeQuery = true)
+    int addReservedUsingSnapshot(@Param("productId") Long productId,
+                                 @Param("quantity") int quantity,
+                                 @Param("expectedAvailable") int expectedAvailable);
 }
