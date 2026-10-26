@@ -15,7 +15,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-/** 要件 3.1、3.6 から 3.9、4.5 - 予約の受付の時間帯の重なりの検査（第 1 回だけで比べる） */
+/** 要件 3.1、3.6 から 3.9、4.5 - 予約の受付の時間帯の重なりの検査（連続講座は全回で比べる） */
 @AutoConfigureMockMvc
 class ReservationOverlapTest extends ReservationTestBase {
     long customer;
@@ -64,33 +64,37 @@ class ReservationOverlapTest extends ReservationTestBase {
     }
 
     @Test
-    void 要件3_8_連続講座は第1回だけで比べる_予約しようとする講座の後の回が重なっても予約できる() throws Exception {
+    void 要件3_7_連続講座は全回で比べる_予約しようとする講座の後の回が重なればR04() throws Exception {
         Course booked = createCourse("既存", 3000, 10, 1, session(1, "2026-11-08T10:00", "A教室", "山田"));
         Course series = createCourse("連続", 9000, 10, 0,
                 session(1, "2026-11-01T10:00", "B教室", "佐藤"),
                 session(2, "2026-11-08T11:00", "B教室", "佐藤"));
         createReservation(customer, booked, ReservationStatus.ACTIVE);
 
-        reserve(series).andExpect(status().isCreated());
+        reserve(series)
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("R04"));
 
-        assertThat(reload(series).getReservedCount()).isEqualTo(1);
+        assertThat(reload(series).getReservedCount()).isZero();
     }
 
     @Test
-    void 要件3_8_連続講座は第1回だけで比べる_予約済みの講座の後の回が重なっても予約できる() throws Exception {
+    void 要件3_7_連続講座は全回で比べる_予約済みの講座の後の回が重なればR04() throws Exception {
         Course bookedSeries = createCourse("既存の連続", 9000, 10, 1,
                 session(1, "2026-11-01T10:00", "A教室", "山田"),
                 session(2, "2026-11-08T10:00", "A教室", "山田"));
         Course target = createCourse("単発", 3000, 10, 0, session(1, "2026-11-08T10:00", "B教室", "佐藤"));
         createReservation(customer, bookedSeries, ReservationStatus.ACTIVE);
 
-        reserve(target).andExpect(status().isCreated());
+        reserve(target)
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("R04"));
 
-        assertThat(reload(target).getReservedCount()).isEqualTo(1);
+        assertThat(reload(target).getReservedCount()).isZero();
     }
 
     @Test
-    void 要件3_8_連続講座の第1回どうしが重なればR04() throws Exception {
+    void 要件3_7_連続講座の第1回どうしが重なればR04() throws Exception {
         Course bookedSeries = createCourse("既存の連続", 9000, 10, 1,
                 session(1, "2026-11-01T10:00", "A教室", "山田"),
                 session(2, "2026-11-08T10:00", "A教室", "山田"));

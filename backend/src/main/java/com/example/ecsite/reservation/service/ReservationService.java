@@ -59,10 +59,11 @@ public class ReservationService {
         if (alreadyReserved) {
             throw new ReservationException(ReservationError.R03);
         }
-        // 連続講座も第 1 回（session_no = 1）だけを比べる。接するだけ（終了 = 開始）は重ならない
-        TimeRange target = firstSessionRange(course);
+        // 連続講座は全回の時間帯を比べ、どれか 1 組でも重なれば重なる。接するだけ（終了 = 開始）は重ならない
+        List<TimeRange> target = sessionRanges(course);
         boolean overlaps = active.stream()
-                .anyMatch(r -> target.overlaps(firstSessionRange(r.getCourse())));
+                .flatMap(r -> sessionRanges(r.getCourse()).stream())
+                .anyMatch(booked -> target.stream().anyMatch(t -> t.overlaps(booked)));
         if (overlaps) {
             throw new ReservationException(ReservationError.R04);
         }
@@ -128,12 +129,10 @@ public class ReservationService {
         return new CancelResult(reservationId, decision.fee());
     }
 
-    private static TimeRange firstSessionRange(Course course) {
-        CourseSession first = course.getSessions().stream()
-                .filter(s -> s.getSessionNo() == 1)
-                .findFirst()
-                .orElseThrow(() -> new IllegalStateException("第 1 回がない講座です"));
-        return new TimeRange(first.getStartsAt(), first.getEndsAt());
+    private static List<TimeRange> sessionRanges(Course course) {
+        return course.getSessions().stream()
+                .map(s -> new TimeRange(s.getStartsAt(), s.getEndsAt()))
+                .toList();
     }
 
     private ReservationView toView(Reservation reservation, Course course, OffsetDateTime now) {

@@ -190,7 +190,7 @@ flowchart TD
 | 2.4, 2.5 | 予約ボタンの状態 | CourseService（reservable） | CourseView.reservable | - |
 | 3.1 | 検査の順序 | ReservationService | POST reservations | 予約の受付 |
 | 3.2 から 3.6 | R01 から R04、境界 | ReservationService, TimeRange | ReservationError | 予約の受付 |
-| 3.7, 3.8 | 第 1 回だけで判定、接するだけは重ならない | TimeRange | - | 予約の受付 |
+| 3.7, 3.8 | 全回で判定、接するだけは重ならない | TimeRange | - | 予約の受付 |
 | 3.9 | キャンセル済みを除く | ReservationRepository（有効な予約だけ） | - | 予約の受付 |
 | 4.1, 4.2 | 1 件の予約で全回の席 | ReservationService, CourseRepository | reserved_count の増加 | 予約の受付 |
 | 4.3 | 同時予約で定員を超えない | CourseRepository（条件付き UPDATE） | CHECK 制約 | 予約の受付 |
@@ -236,7 +236,7 @@ flowchart TD
 **Responsibilities & Constraints**
 - `reserve` と `cancel` は 1 つのトランザクションで、読み取りから更新までを行う
 - 検査の順序は 残席 → 締め切り → 二重予約 → 重なり。この順序を変えない
-- 重なりの判定は、お客様の有効な予約の講座の第 1 回と、予約しようとする講座の第 1 回だけを比べる（3.7）
+- 重なりの判定は、お客様の有効な予約の講座の全回と、予約しようとする講座の全回を総当たりで比べる（3.7）
 - お客様の識別は引数の `customerId` だけを使う（認証は Out of Boundary）
 
 **Contracts**: Service [x] / API [x] / State [x]
@@ -403,7 +403,7 @@ steering の testing.md に従い、受入基準 1 つにつき 1 つ以上の�
 
 ### Integration Tests
 - `ReservationReserveTest`: 残席 0 で R01、締め切りの 1 時間前ちょうどは受付で 1 秒後は R02、同じ講座で R03、検査の順序（R01 と R02 が同時に成り立つと R01）、エラー時に件数と `reserved_count` が変わらない（3.1 から 3.6, 4.1, 4.4）
-- `ReservationOverlapTest`: 連続講座は第 1 回だけで判定、接するだけは予約できる、キャンセル済みは R03 と R04 に含めない、キャンセル後の再予約（3.7 から 3.9, 4.5）
+- `ReservationOverlapTest`: 連続講座は全回で判定、接するだけは予約できる、キャンセル済みは R03 と R04 に含めない、キャンセル後の再予約（3.7 から 3.9, 4.5）
 - `ReservationCancelTest`: 本人以外は R06 で変わらない、開始後は R05、キャンセルで残席が 1 戻る、連続講座の料金が受講料基準、予約一覧に本人の有効な予約だけが出る（5.1, 6.1, 6.5 から 6.7）
 - `CourseApiTest`: 一覧の項目、「残り n 席」と「満席」、満席と締め切り後の `reservable`（2.1 から 2.5）
 - `CourseRegistrationTest`: 検査の順序、R07・R08・R09、同じ登録内の回の重なり、接するだけは登録できる、エラー時に講座も回も残らない（8.1 から 8.7）
