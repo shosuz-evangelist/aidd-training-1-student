@@ -229,4 +229,20 @@ class PurchaseRequestDelegationTest {
         long id = pending();
         assertApproveRejected(id, otherSm, ApprovalError.A01);
     }
+
+    @Test
+    void 代理人が自分の申請を代理として承認または差し戻すとA01() {
+        at("2026-10-21T10:00:00");
+        long ownRequest = data.createRequest(delegate, RequestStatus.PENDING, EmployeeRole.SECTION_MANAGER,
+                new Item(1_000, 1));
+
+        assertApproveRejected(ownRequest, delegate, ApprovalError.A01);
+        assertReturnRejected(ownRequest, delegate, ApprovalError.A01);
+        assertThat(service.list(delegate)).filteredOn(r -> r.id() == ownRequest)
+                .singleElement()
+                .satisfies(r -> {
+                    assertThat(r.canApprove()).isFalse();
+                    assertThat(r.canReturn()).isFalse();
+                });
+    }
 }

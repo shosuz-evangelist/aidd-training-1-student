@@ -220,6 +220,7 @@ public class PurchaseRequestService {
      * 承認と差し戻しで共通の、状態と権限の確認。承認待ちでなければ A03、権限がなければ A01。
      * 本人の資格があれば null(履歴の代理元は空)。なければ今日有効な代理のうち、代理元が資格を満たす最初のもの
      * (代理設定の ID の昇順)の代理元の ID を返す。見つからなければ A01。
+     * 操作者が申請者本人で本人承認の資格を満たさない場合は、代理経由でも A01 にする。
      * 複数の原因が重なるときの順序は未決定のため、単一の原因だけを確かめる。
      */
     private Long checkOperation(PurchaseRequest request, Employee applicant, Employee actor) {
@@ -228,6 +229,9 @@ public class PurchaseRequestService {
         }
         if (policy.isEligibleApprover(request, applicant, actor)) {
             return null;
+        }
+        if (actor.getCustomerId().equals(applicant.getCustomerId())) {
+            throw new ApprovalException(ApprovalError.A01);
         }
         LocalDate today = LocalDate.now(clock);
         return delegationService.activeFor(actor.getCustomerId(), today).stream()
