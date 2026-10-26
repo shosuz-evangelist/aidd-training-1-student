@@ -82,7 +82,7 @@ backend/src/main/
 ├── java/com/example/ecsite/billing/
 │   └── entity/TaxRounding.java        # 新規: FLOOR / HALF_UP の enum
 └── resources/db/migration/
-    └── V6__add_premium_plan.sql       # 新規: 列の追加とプレミアムの行
+    └── V7__add_premium_plan.sql       # 新規: 列の追加とプレミアムの行
 backend/src/test/java/com/example/ecsite/billing/
 └── PremiumPlanTest.java               # 新規: Requirement 1〜5, 7 のテスト
 ```
@@ -137,7 +137,7 @@ flowchart TD
 
 | Component | Layer | Intent | Req Coverage | Key Dependencies | Contracts |
 |-----------|-------|--------|--------------|------------------|-----------|
-| V6__add_premium_plan.sql | Data | 列の追加とプレミアムの行 | 1.1, 1.2, 6.1〜6.4 | V4 (P0) | State |
+| V7__add_premium_plan.sql | Data | 列の追加とプレミアムの行 | 1.1, 1.2, 6.1〜6.4 | V4 (P0) | State |
 | BillingPlan / TaxRounding | Entity | プランの属性を持つ | 4, 5, 6 | billing_plans (P0) | State |
 | BillingCalculator | Service | 属性を読んで請求額を求める | 3, 4, 5, 6, 7 | BillingPlan (P0) | Service |
 | SubscriptionPage | UI | プラン変更の案内文 | 2.1, 2.3 | `/api/billing-plans` (P1) | - |
@@ -181,7 +181,7 @@ public final class BillingCalculator {
 
 ### Data
 
-#### V6__add_premium_plan.sql
+#### V7__add_premium_plan.sql
 
 ```sql
 ALTER TABLE billing_plans
