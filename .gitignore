@@ -1,0 +1,22 @@
+# macOS
+.DS_Store
+
+# Backend
+backend/target/
+backend/*.log
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+
+# Secrets
+.env
+.env.*
+!.env.example
+
+# IDE
+.idea/
+*.iml
+
+# Build info
+*.tsbuildinfo
