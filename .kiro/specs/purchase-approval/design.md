@@ -250,7 +250,7 @@ public class PurchaseRequestService {
 | resubmit | RETURNED | `actorId == applicantId`。代理は不可(7.7) | PENDING(承認待ちの役割は未決定。Open Questions) |
 | order | APPROVED | 役割が PURCHASING。代理は不可(7.7) | ORDERED |
 
-- 代理: 承認と差し戻しのとき、本人の資格が無い操作者について、今日(`LocalDate.now(clock)`)が `start_date <= 今日 <= end_date` の代理のうち、代理元(delegator)が `isEligibleApprover` を満たすものを探す。見つかれば代理元を履歴の `on_behalf_of` に入れる。見つからなければ A01(7.5、7.6)
+- 代理: 承認と差し戻しのとき、本人の資格が無い操作者について、今日(`LocalDate.now(clock)`)が `start_date <= 今日 <= end_date` の代理のうち、代理元(delegator)が `isEligibleApprover` を満たすものを探す。ただし代理人が申請者本人のときは、本人承認と同じく 1 万円未満だけにする(代理を通して 2.14 の制限を外さない。`ApprovalPolicy.isEligibleDelegate`)。見つかれば代理元を履歴の `on_behalf_of` に入れる。見つからなければ A01(7.5、7.6)
 - 履歴の日時は `OffsetDateTime.now(clock)`。承認者本人の操作では `on_behalf_of` を空にする(9.3)
 - 一覧: 全ての申請を、`viewerId` ごとの `canApprove`・`canReturn`・`canResubmit`・`canOrder` つきで返す。4 つのフラグは操作と同じ判定を呼んで求める(8.4)
 

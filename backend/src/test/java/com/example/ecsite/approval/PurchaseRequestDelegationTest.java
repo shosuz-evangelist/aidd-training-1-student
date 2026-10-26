@@ -224,6 +224,34 @@ class PurchaseRequestDelegationTest {
     }
 
     @Test
+    void 課長は代理を通しても自分の1万円以上の申請を承認も差し戻しもできない() {
+        at("2026-10-21T10:00:00");
+        long dm = emp("dm", "営業部", EmployeeRole.DEPARTMENT_MANAGER);
+        delegations.register(dm, sm, START, END);
+        long id = data.createRequest(sm, RequestStatus.PENDING, EmployeeRole.DEPARTMENT_MANAGER,
+                new Item(10_000, 1));
+
+        assertApproveRejected(id, sm, ApprovalError.A01);
+        assertReturnRejected(id, sm, ApprovalError.A01);
+        assertThat(service.list(sm)).filteredOn(r -> r.id() == id)
+                .singleElement().satisfies(r -> {
+                    assertThat(r.canApprove()).isFalse();
+                    assertThat(r.canReturn()).isFalse();
+                });
+    }
+
+    @Test
+    void 代理元の役割の申請者でない社員は1万円以上でも代理で承認できる() {
+        at("2026-10-21T10:00:00");
+        long dm = emp("dm", "営業部", EmployeeRole.DEPARTMENT_MANAGER);
+        delegations.register(dm, delegate, START, END);
+        long id = data.createRequest(sm, RequestStatus.PENDING, EmployeeRole.DEPARTMENT_MANAGER,
+                new Item(10_000, 1));
+
+        assertThat(service.approve(id, delegate).status()).isEqualTo(RequestStatus.APPROVED);
+    }
+
+    @Test
     void 資格のない社員の代理期間外の操作はA01() {
         at("2026-10-21T10:00:00");
         long id = pending();

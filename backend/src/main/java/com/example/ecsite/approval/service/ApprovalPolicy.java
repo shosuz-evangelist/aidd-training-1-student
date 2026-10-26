@@ -91,7 +91,21 @@ public final class ApprovalPolicy {
                 && (approver.getDepartment() == null || !approver.getDepartment().equals(applicant.getDepartment()))) {
             return false;
         }
-        if (approver.getCustomerId().equals(applicant.getCustomerId())) {
+        return isAllowedSelfApproval(request, applicant, approver);
+    }
+
+    /**
+     * 代理人 delegate が代理元 delegator の代わりに request を承認または差し戻せるか。代理元が本人の資格を満たし、
+     * かつ代理人が申請者のときは本人承認と同じく 1 万円未満だけ(代理を通して 2.14 の制限を外さない)。
+     */
+    public boolean isEligibleDelegate(PurchaseRequest request, Employee applicant, Employee delegator,
+                                      Employee delegate) {
+        return isEligibleApprover(request, applicant, delegator)
+                && isAllowedSelfApproval(request, applicant, delegate);
+    }
+
+    private static boolean isAllowedSelfApproval(PurchaseRequest request, Employee applicant, Employee actor) {
+        if (actor.getCustomerId().equals(applicant.getCustomerId())) {
             return bandOf(request.getTotalAmount()) == Band.UNDER_10K;
         }
         return true;
