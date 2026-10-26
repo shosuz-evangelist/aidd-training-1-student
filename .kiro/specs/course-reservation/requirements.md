@@ -58,7 +58,7 @@
 4. When 現在日時が第 1 回の開始日時の 1 時間前の時刻とちょうど同じである, the Course Reservation Service shall 予約を受け付ける
 5. If お客様が同じ講座の有効な予約をすでに持っている, then the Course Reservation Service shall エラー R03「すでに予約しています」を返す
 6. If 予約しようとする講座の時間帯が、お客様の有効な予約の講座の時間帯と重なる, then the Course Reservation Service shall エラー R04「時間帯が重なります」を返す
-7. The Course Reservation Service shall 連続講座の時間帯の重なりを、第 1 回の時間帯だけで判定する
+7. The Course Reservation Service shall 連続講座の時間帯の重なりを、全回の時間帯で判定する（予約しようとする講座と予約済みの講座のいずれの回が重なっても R04 とする）
 8. When 予約しようとする講座の第 1 回の終了時刻が、予約済みの講座の第 1 回の開始時刻と同じである, または第 1 回の開始時刻が予約済みの講座の第 1 回の終了時刻と同じである, the Course Reservation Service shall その 2 つの講座を重ならないものとして扱う
 9. When お客様が以前にキャンセルした講座を予約する, the Course Reservation Service shall キャンセル済みの予約を R03 と R04 の判定に含めない
 
