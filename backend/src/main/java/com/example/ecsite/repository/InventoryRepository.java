@@ -7,9 +7,13 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 public interface InventoryRepository extends JpaRepository<Inventory, Long> {
-    /** 引当済数を加算式で増やす。行が無ければ 0 を返す。 */
+    /**
+     * 引当済数を加算式で増やす。行が無いとき、または購入可能数が足りないときは 0 を返す。
+     * 条件の判定と加算を 1 文で行うので、同時に実行されても在庫を超えて引き当てない。
+     */
     @Modifying(flushAutomatically = true, clearAutomatically = true)
-    @Query(value = "UPDATE inventories SET reserved_quantity = reserved_quantity + :quantity WHERE product_id = :productId",
+    @Query(value = "UPDATE inventories SET reserved_quantity = reserved_quantity + :quantity "
+            + "WHERE product_id = :productId AND stock_quantity - reserved_quantity >= :quantity",
             nativeQuery = true)
     int addReserved(@Param("productId") Long productId, @Param("quantity") int quantity);
 }

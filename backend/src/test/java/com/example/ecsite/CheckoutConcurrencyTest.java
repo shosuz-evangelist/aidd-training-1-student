@@ -74,6 +74,28 @@ class CheckoutConcurrencyTest extends EcTestBase {
     }
 
     @Test
+    void 在庫が残り5の商品を10人が同時に購入確定しても在庫を超えて売れない() throws Exception {
+        long product = data.createProduct("商品", 100);
+        data.createInventory(product, 10, 5);
+        List<Long> customers = new ArrayList<>();
+        for (int i = 0; i < 10; i++) {
+            long c = data.createCustomer("c" + i + "@example.com");
+            cartService.addToCart(c, product, 1);
+            customers.add(c);
+        }
+        // どの画面も、購入可能数が 5 だった時点の値を送ってくる
+        List<CartService.AvailabilityInput> stale = List.of(new CartService.AvailabilityInput(product, 5));
+
+        List<String> outcomes = checkoutSimultaneously(customers, stale);
+
+        assertThat(outcomes.stream().filter("OK"::equals).count()).isEqualTo(5);
+        assertThat(outcomes.stream().filter(o -> !o.equals("OK")).toList())
+                .hasSize(5).allMatch(o -> o.startsWith("CartException"));
+        assertThat(data.getReservedQuantity(product)).isEqualTo(10);
+        assertThat(saleCount()).isEqualTo(5);
+    }
+
+    @Test
     void 要件6_6_逆順の2商品を2人が同時に購入確定しても止まらず両方の加算が反映される() throws Exception {
         long p1 = data.createProduct("商品1", 100);
         long p2 = data.createProduct("商品2", 200);

@@ -37,7 +37,7 @@ public class InventoryService {
         return result;
     }
 
-    /** 引当済数を加算する。在庫の行が無ければ false。呼び出し元のトランザクションに参加する。 */
+    /** 引当済数を加算する。在庫の行が無いか購入可能数が足りなければ false。呼び出し元のトランザクションに参加する。 */
     @Transactional
     public boolean reserve(long productId, int quantity) {
         return inventoryRepository.addReserved(productId, quantity) > 0;

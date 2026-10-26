@@ -103,7 +103,8 @@ public class CartService {
 
     /**
      * 送られた購入可能数で検査し、商品 ID の昇順で引き当て、カートの全商品の売上を記録し、カートを空にする。
-     * 在庫数は読み直さない。失敗(CartException)したときは、全ての変更を戻す。
+     * 送られた値は古い場合があるので、引当のときに在庫の側でも購入可能数を確かめる。
+     * 失敗(CartException)したときは、全ての変更を戻す。
      */
     @Transactional
     public List<SaleView> checkout(Long customerId, List<AvailabilityInput> availabilities) {
