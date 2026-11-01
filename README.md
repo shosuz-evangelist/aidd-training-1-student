@@ -13,11 +13,18 @@
 
 パスワードはどのアカウントも `123` です。
 
-| アカウント | 使う画面 |
-|---|---|
-| tanaka@example.com | EC・講座の予約・定期便、購買申請の担当者 |
-| sato@example.com | 購買申請の課長 |
-| nakajima@example.com | 購買申請の購買部 |
+| 番号 | アカウント | 使う画面 |
+|---|---|---|
+| 1 | tanaka@example.com | EC・講座の予約・定期便、購買申請の営業部の担当者 |
+| 2 | sato@example.com | 購買申請の営業部の課長 |
+| 3 | suzuki@example.com | 購買申請の営業部の部長 |
+| 4 | takahashi@example.com | 購買申請の総務部の担当者 |
+| 5 | yamada@example.com | 購買申請の総務部の課長 |
+| 6 | ito@example.com | 購買申請の総務部の部長 |
+| 7 | watanabe@example.com | 購買申請の役員 |
+| 8 | nakajima@example.com | 購買申請の購買部 |
+
+番号は社員の番号で、購買申請の承認の画面で代理人を設定するときに使います。
 
 ## フォルダ
 

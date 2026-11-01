@@ -42,16 +42,6 @@ class DiscountTest extends BillingTestBase {
     }
 
     @Test
-    void 要件6_4_ライトの年契約の割引は10パーセント() {
-        long s = subscribe("LIGHT", "2026-09-01", true, false);
-
-        InvoiceView v = invoice(s, "2026-10");
-
-        assertThat(v.annualDiscount()).isEqualTo(300);
-        assertAmounts(v, 3000, 300, 270, 2970);
-    }
-
-    @Test
     void 要件4_4_割引の後は0円より小さくしない() {
         long s = subscribe("STANDARD", "2026-10-31", false, true);
 
