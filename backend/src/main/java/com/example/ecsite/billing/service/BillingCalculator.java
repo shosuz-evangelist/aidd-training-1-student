@@ -1,8 +1,10 @@
 package com.example.ecsite.billing.service;
 
 import com.example.ecsite.billing.dto.InvoiceView;
+import com.example.ecsite.billing.entity.BillingPlan;
 import com.example.ecsite.billing.entity.PlanPeriod;
 import com.example.ecsite.billing.entity.Subscription;
+import com.example.ecsite.billing.entity.TaxRounding;
 
 import java.time.LocalDate;
 import java.time.YearMonth;
@@ -16,7 +18,6 @@ import java.util.List;
  * 1 円未満は、日割り・年契約の割引・消費税のそれぞれで切り捨てる（long の割り算）。
  */
 public final class BillingCalculator {
-    public static final long ANNUAL_DISCOUNT_PERCENT = 10;
     public static final long COUPON_AMOUNT = 500;
     public static final long TAX_PERCENT = 10;
 
@@ -31,6 +32,7 @@ public final class BillingCalculator {
 
         // 1. 日割り（プランの期間ごと）
         List<InvoiceView.Line> lines = new ArrayList<>();
+        List<BillingPlan> plansInMonth = new ArrayList<>();
         for (PlanPeriod p : subscription.getPeriods()) {
             LocalDate end = p.getEndsOn() != null ? p.getEndsOn() : subscription.getCancelledOn();
             LocalDate from = later(p.getStartsOn(), monthStart);
@@ -41,6 +43,7 @@ public final class BillingCalculator {
             int days = (int) ChronoUnit.DAYS.between(from, to) + 1;
             long amount = p.getPlan().getMonthlyFee() * days / daysInMonth;
             lines.add(new InvoiceView.Line(p.getPlan().getCode(), from, to, days, amount));
+            plansInMonth.add(p.getPlan());
         }
         if (lines.isEmpty()) {
             return null;
@@ -48,16 +51,52 @@ public final class BillingCalculator {
         long subtotal = lines.stream().mapToLong(InvoiceView.Line::amount).sum();
 
         // 2. 割引: 年契約の割引を先に、クーポンを後に。0 円より小さくしない
-        long annualDiscount = subscription.isAnnual() ? subtotal * ANNUAL_DISCOUNT_PERCENT / 100 : 0;
+        Policy policy = policyOf(plansInMonth);
+        long annualDiscount = subscription.isAnnual() ? annualDiscountOf(subtotal, policy.annualDiscountPercent()) : 0;
         long afterAnnual = subtotal - annualDiscount;
         boolean couponMonth = subscription.isCoupon() && YearMonth.from(subscription.getStartedOn()).equals(month);
         long couponDiscount = couponMonth ? Math.min(COUPON_AMOUNT, afterAnnual) : 0;
         long afterDiscount = afterAnnual - couponDiscount;
 
         // 3. 消費税  4. 請求額
-        long tax = afterDiscount * TAX_PERCENT / 100;
+        long tax = taxOf(afterDiscount, policy.taxRounding());
         long total = afterDiscount + tax;
         return new InvoiceView(month.toString(), lines, subtotal, annualDiscount, couponDiscount, afterDiscount, tax, total);
+    }
+
+    /** 月の中で適用する年契約の割引率と税の端数処理。 */
+    record Policy(long annualDiscountPercent, TaxRounding taxRounding) {
+    }
+
+    /** 割引後の金額から消費税を求める。FLOOR は切り捨て、HALF_UP は四捨五入。 */
+    static long taxOf(long afterDiscount, TaxRounding rounding) {
+        return switch (rounding) {
+            case FLOOR -> afterDiscount * TAX_PERCENT / 100;
+            case HALF_UP -> (afterDiscount * TAX_PERCENT + 50) / 100;
+        };
+    }
+
+    /**
+     * 小計と割引率から年契約の割引額を求める。
+     * 1 円未満の端数の処理は暫定で切り捨て（未決定の事項 1）。決まったらここだけを差し替える。
+     */
+    static long annualDiscountOf(long subtotal, long percent) {
+        return subtotal * percent / 100;
+    }
+
+    /**
+     * 月の中のプランが 1 つの (割引率, 税の端数処理) を共有していればそれを返す。
+     * 2 つ以上あるときは暫定で IllegalStateException（未決定の事項 2）。
+     */
+    static Policy policyOf(List<BillingPlan> plansInMonth) {
+        List<Policy> distinct = plansInMonth.stream()
+                .map(p -> new Policy(p.getAnnualDiscountPercent(), p.getTaxRounding()))
+                .distinct()
+                .toList();
+        if (distinct.size() != 1) {
+            throw new IllegalStateException("月の中のプランの方針が 1 つに定まらない: " + distinct);
+        }
+        return distinct.get(0);
     }
 
     private static LocalDate later(LocalDate a, LocalDate b) {

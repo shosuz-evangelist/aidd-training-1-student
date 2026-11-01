@@ -121,7 +121,7 @@ const SubscriptionPage: React.FC = () => {
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
             <button
               onClick={() => {
-                const planCode = window.prompt("変更後のプラン（LIGHT / STANDARD）") ?? "";
+                const planCode = window.prompt("変更後のプラン（LIGHT / STANDARD / PREMIUM）") ?? "";
                 const effectiveOn = window.prompt("変更日（例: 2026-11-16）") ?? "";
                 run(() => axios.post(`/api/subscriptions/${s.id}/change-plan`, { planCode, effectiveOn }), "プランを変えました");
               }}
