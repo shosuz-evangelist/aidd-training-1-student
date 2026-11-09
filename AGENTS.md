@@ -73,3 +73,13 @@ Copilot capabilities depend on the client. VS Code and Copilot CLI support nativ
 - Load additional steering only when required by project rules or relevant to the task.
 - Default files: `product.md`, `tech.md`, `structure.md`
 - Custom files are supported (managed via `/kiro-steering-custom`)
+
+## アプリの起動
+アプリの起動を頼まれたら、バックエンドと画面を、それぞれ別のターミナルで起動したままにする。データベースは Codespace の作成時に起動している。
+
+- バックエンド（8080 番）: `cd backend && ./mvnw spring-boot:run`
+- 画面（5173 番）: `cd frontend && npm run dev`。package.json は frontend にあり、リポジトリ直下にはない
+
+- Java のデバッグ機能で起動クラスを直接実行しない。Spring Boot の依存関係がクラスパスに入らず、起動できない
+- 画面は 5173 番を開く。画面からの /api は 8080 番へ転送される
+- 5173 番を開いて 401 になったら、ポートタブで 5173 番の表示範囲を Public にする

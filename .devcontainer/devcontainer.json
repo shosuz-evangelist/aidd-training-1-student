@@ -7,17 +7,19 @@
     "ghcr.io/devcontainers/features/java:1": {
       "version": "25",
       "jdkDistro": "tem",
-      "installMaven": "false"
+      "installMaven": "true"
     },
     "ghcr.io/devcontainers/features/node:1": {
       "version": "22"
-    }
+    },
+    "ghcr.io/devcontainers/features/github-cli:1": {}
   },
   "forwardPorts": [5173, 8080],
   "portsAttributes": {
     "5173": { "label": "Frontend" },
     "8080": { "label": "Backend API" }
   },
+  "postAttachCommand": "gh codespace ports visibility 5173:public -c \"$CODESPACE_NAME\" || true",
   "postCreateCommand": "cd frontend && npm ci && cd ../backend && ./mvnw -q -B -DskipTests package",
   "customizations": {
     "vscode": {
