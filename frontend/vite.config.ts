@@ -6,7 +6,13 @@ export default defineConfig({
   server: {
     port: 5173,
     proxy: {
-      "/api": "http://localhost:8080",
+      "/api": {
+        target: "http://localhost:8080",
+        // Codespaces では画面の URL が localhost でないため、Origin を外してバックエンドに渡す
+        configure: (proxy) => {
+          proxy.on("proxyReq", (proxyReq) => proxyReq.removeHeader("origin"));
+        },
+      },
     },
   },
 });
