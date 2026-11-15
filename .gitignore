@@ -16,6 +16,7 @@ frontend/dist/
 
 # IDE
 .idea/
+.vscode/
 *.iml
 
 # Build info
